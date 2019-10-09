@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, AsyncStorage, Image, TouchableOpacity, Text } from 'react-native';
+import socketio from 'socket.io-client';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Image, AsyncStorage, TouchableOpacity, Text } from 'react-native';
 
 import SpotList from '../components/SpotList';
 
-import logo from '../assets/logo.png'
+import logo from '../assets/logo.png';
 
 export default function List() {
   const [techs, setTechs] = useState([]);
 
   useEffect(() => {
-    AsyncStorage.getItem('techs').then(storageTechs => {
-      const techsArray = storageTechs.split(',').map(tech => tech.trim());
+    AsyncStorage.getItem('user').then(user_id => {
+      const socket = socketio('http://10.0.1.86:3333', {
+        query: { user_id }
+      })
+
+      socket.on('booking_response', booking => {
+        Alert.alert(`Sua reserva em: ${booking.spot.company} para ${booking.date} foi ${booking.approved ? 'Aprovada!' : 'Rejeitada.'}`);
+      })
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem('techs').then(storagedTechs => {
+      const techsArray = storagedTechs.split(',').map(tech => tech.trim());
 
       setTechs(techsArray);
-    })
+    });
   }, []);
 
   async function logout() {
@@ -23,25 +36,25 @@ export default function List() {
   return (
     <SafeAreaView style={styles.container}>
       <Image style={styles.logo} source={logo} />
+
       <ScrollView>
         {techs.map(tech => <SpotList key={tech} tech={tech} />)}
+        <TouchableOpacity onPress={logout} style={styles.button}>
+          <Text style={styles.logout}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
-
-      <TouchableOpacity style={styles.logout} onPress={logout} >
-        <Text>Logout</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
 
   logo: {
-    height: 32,
     alignSelf: 'center',
+    height: 32,
     marginTop: 10,
     resizeMode: 'contain',
   },
@@ -51,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     height: 30,
-    marginTop: 60,
-    resizeMode: 'contain',
+    marginBottom: 30,
+    marginTop: 30,
   }
-})
+});
