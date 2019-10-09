@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // change ip address acording you office
-  baseURL: 'http://10.0.1.86:3333',
+  // change ip address according your office
+  baseURL: 'http://localhost:3333',
 });
 
 export default api;
